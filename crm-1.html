@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="The Flight Log">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D0B0C">
+<title>The Flight Log</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0D0B0C;
+  --panel:#181415;
+  --panel-2:#221C1D;
+  --parch:#F2E9E9;
+  --ash:#9C8A8A;
+  --line:#3A2A2C;
+  --gold:#EDE6D8;
+  --gold-dim:#B0A398;
+  --ember:#D91E24;
+  --ember-dim:#A6151A;
+  --frost:#6E93A6;
+  --crimson:#7A1014;
+  --amber:#D9A441;
+  --violet:#8C6FB0;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(ellipse at top, #2A1416 0%, var(--bg) 300px);
+  color:var(--parch);
+  font-family:'Inter', sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+.app{max-width:480px;margin:0 auto;padding:22px 16px 100px;}
+
+.emblem-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:14px;
+}
+.emblem-badge{
+  flex-shrink:0;
+  width:58px;
+  cursor:pointer;
+  filter:drop-shadow(0 3px 8px rgba(217,30,36,0.5)) drop-shadow(0 2px 5px rgba(0,0,0,0.6));
+  transition:transform .15s ease;
+}
+.emblem-badge:active{transform:scale(0.92);}
+.emblem-badge.pulse{animation:emblem-pulse .5s ease;}
+@keyframes emblem-pulse{
+  0%{ filter:drop-shadow(0 3px 8px rgba(217,30,36,0.5)) drop-shadow(0 2px 5px rgba(0,0,0,0.6)); }
+  50%{ filter:drop-shadow(0 3px 18px rgba(217,30,36,0.95)) drop-shadow(0 2px 8px rgba(0,0,0,0.6)); transform:scale(1.08); }
+  100%{ filter:drop-shadow(0 3px 8px rgba(217,30,36,0.5)) drop-shadow(0 2px 5px rgba(0,0,0,0.6)); }
+}
+.emblem-badge svg{ display:block; width:100%; height:auto; }
+
+header.top{margin-bottom:16px;}
+
+header.top h1{
+  font-family:'Cinzel', serif;
+  font-weight:900;
+  font-size:25px;
+  margin:0 0 4px;
+  color:var(--gold);
+  letter-spacing:0.01em;
+}
+header.top .byline{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  color:var(--gold-dim);
+  font-weight:600;
+}
+
+.search-row{margin:16px 0 10px;}
+.search-row input{
+  width:100%;
+  font-family:'Inter', sans-serif;
+  font-size:14px;
+  padding:10px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--parch);
+  outline:none;
+}
+.search-row input::placeholder{color:var(--ash);}
+.search-row input:focus{border-color:var(--ember);}
+
+.chips{display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; margin-bottom:6px;}
+.chip{
+  flex-shrink:0;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.02em;
+  padding:6px 13px;
+  border-radius:5px;
+  border:1.5px solid var(--line);
+  background:var(--panel);
+  color:var(--ash);
+  cursor:pointer;
+  user-select:none;
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.chip.active{
+  background:var(--ember); color:var(--bg); border-color:var(--ember);
+  box-shadow:2px 2px 0 var(--gold);
+}
+.chip:active{transform:translate(1px,1px);}
+
+.list{margin-top:14px; display:flex; flex-direction:column; gap:9px;}
+
+.row{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  cursor:pointer;
+}
+.row:active{background:var(--panel-2);}
+
+.monogram{
+  flex-shrink:0;
+  width:44px; height:44px;
+  border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cinzel', serif;
+  font-weight:700;
+  font-size:15px;
+  border:1.5px solid;
+}
+
+.row-main{flex:1; min-width:0;}
+.row-top{display:flex; align-items:baseline; gap:7px; flex-wrap:wrap;}
+.row-name{font-family:'Cinzel', serif; font-weight:700; font-size:15px; color:var(--parch);}
+.row-tag{
+  font-size:9.5px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--ash);
+  font-weight:600;
+}
+.row-quip{
+  font-size:12.5px;
+  color:var(--ash);
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.bday-badge{
+  font-size:11px;
+  font-weight:600;
+  color:var(--amber);
+  margin-top:3px;
+}
+
+.touch-btn{
+  flex-shrink:0;
+  font-family:'Inter', sans-serif;
+  font-size:11.5px;
+  font-weight:700;
+  padding:8px 10px;
+  border-radius:7px;
+  border:1.5px solid var(--ember);
+  background:var(--panel);
+  color:var(--ember);
+  cursor:pointer;
+  text-align:center;
+  line-height:1.2;
+  box-shadow:2.5px 2.5px 0 var(--ember);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.touch-btn:active{
+  background:var(--ember); color:var(--bg);
+  transform:translate(2.5px,2.5px);
+  box-shadow:0 0 0 var(--ember);
+}
+
+.empty{
+  text-align:center;
+  padding:56px 20px;
+  color:var(--ash);
+}
+.empty h2{
+  font-family:'Cinzel', serif;
+  font-size:19px;
+  color:var(--gold);
+  margin-bottom:6px;
+}
+.empty p{font-size:13.5px; line-height:1.5;}
+
+.fab{
+  position:fixed;
+  bottom:24px; right:20px;
+  width:56px; height:56px;
+  border-radius:10px;
+  background:var(--ember);
+  color:var(--bg);
+  border:2px solid var(--gold-dim);
+  font-size:26px;
+  font-weight:600;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:4px 4px 0 var(--gold);
+  cursor:pointer;
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.fab:active{
+  transform:translate(4px,4px);
+  box-shadow:0 0 0 var(--gold);
+}
+
+.sheet-backdrop{
+  position:fixed; inset:0;
+  background:rgba(10,6,6,0.65);
+  display:none;
+  align-items:flex-end;
+  z-index:50;
+}
+.sheet-backdrop.open{display:flex;}
+.sheet{
+  background:var(--bg);
+  width:100%;
+  max-width:480px;
+  margin:0 auto;
+  border-radius:14px 14px 0 0;
+  border:1px solid var(--line);
+  border-bottom:none;
+  padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+  max-height:88vh;
+  overflow-y:auto;
+  animation:slideup .2s ease;
+}
+@keyframes slideup{from{transform:translateY(24px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+
+.sheet h2{
+  font-family:'Cinzel', serif;
+  font-weight:700;
+  font-size:19px;
+  margin:0 0 16px;
+  text-align:center;
+  color:var(--gold);
+}
+.field{margin-bottom:14px;}
+.field label{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  color:var(--ash);
+  margin-bottom:5px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+}
+.field input, .field select, .field textarea{
+  width:100%;
+  font-family:'Inter', sans-serif;
+  font-size:15px;
+  padding:10px 12px;
+  border-radius:7px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--parch);
+  outline:none;
+}
+.field textarea{min-height:70px; resize:vertical; font-family:'Inter', sans-serif;}
+.field-row{display:flex; gap:10px;}
+.field-row .field{flex:1;}
+
+.sheet-actions{display:flex; gap:10px; margin-top:6px;}
+.btn{
+  flex:1;
+  font-family:'Inter', sans-serif;
+  font-size:14px;
+  font-weight:700;
+  padding:12px;
+  border-radius:8px;
+  border:1.5px solid var(--line);
+  cursor:pointer;
+  background:var(--panel);
+  color:var(--parch);
+  box-shadow:2.5px 2.5px 0 var(--line);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.btn:active{ transform:translate(2.5px,2.5px); box-shadow:0 0 0 var(--line); }
+.btn.primary{background:var(--ember); color:var(--bg); border-color:var(--ember); box-shadow:2.5px 2.5px 0 var(--gold);}
+.btn.primary:active{box-shadow:0 0 0 var(--gold);}
+.btn.secondary{color:var(--crimson); border-color:var(--crimson); box-shadow:2.5px 2.5px 0 var(--crimson);}
+.btn.secondary:active{box-shadow:0 0 0 var(--crimson);}
+.btn.happy{color:var(--gold); border-color:var(--gold); box-shadow:2.5px 2.5px 0 var(--gold);}
+.btn.happy:active{box-shadow:0 0 0 var(--gold);}
+
+.detail-monogram-row{display:flex; justify-content:center; margin-bottom:12px;}
+.detail-monogram-row .monogram{width:60px; height:60px; font-size:20px;}
+.detail-notes{
+  font-size:14px;
+  line-height:1.5;
+  color:var(--parch);
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  margin-bottom:14px;
+  white-space:pre-wrap;
+}
+.detail-meta{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+  font-size:11.5px;
+  color:var(--ash);
+}
+.detail-meta > div{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:7px;
+  padding:7px 10px;
+  flex:1;
+  text-align:center;
+}
+.detail-meta b{display:block; color:var(--parch); font-size:14px; font-family:'Cinzel', serif;}
+.detail-quip{
+  text-align:center;
+  color:var(--ash);
+  font-size:13px;
+  margin-bottom:14px;
+}
+
+.toast{
+  position:fixed;
+  bottom:26px; left:50%;
+  transform:translateX(-50%);
+  background:var(--panel-2);
+  border:1px solid var(--gold-dim);
+  color:var(--parch);
+  padding:10px 18px;
+  border-radius:7px;
+  font-size:13px;
+  font-weight:500;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+  z-index:60;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;}
+
+/* Ember spark burst — plays when a bond is marked caught up */
+.spark-particle{
+  position:fixed;
+  width:6px; height:6px;
+  border-radius:1px;
+  pointer-events:none;
+  z-index:70;
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="emblem-row">
+      <div class="emblem-badge" id="emblemBadge"></div>
+    </div>
+    <h1>The Flight Log</h1>
+    <div class="byline">kinship tracked by flame and frost</div>
+  </header>
+
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Search your companions&hellip;">
+  </div>
+
+  <div class="chips" id="chips">
+    <div class="chip active" data-filter="all">All</div>
+    <div class="chip" data-filter="family">Kin</div>
+    <div class="chip" data-filter="friend">Shield-kin</div>
+    <div class="chip" data-filter="work">Guild</div>
+    <div class="chip" data-filter="other">Wanderers</div>
+  </div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<button class="fab" id="addBtn">+</button>
+
+<div class="sheet-backdrop" id="formBackdrop">
+  <div class="sheet">
+    <h2 id="formTitle">Add someone</h2>
+    <form id="contactForm">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="f-name" required placeholder="Full name">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Bond</label>
+          <select id="f-relationship">
+            <option value="family">Kin</option>
+            <option value="friend" selected>Shield-kin</option>
+            <option value="work">Guild</option>
+            <option value="other">Wanderer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Check in every</label>
+          <select id="f-frequency">
+            <option value="7">Week</option>
+            <option value="14">2 weeks</option>
+            <option value="30" selected>Month</option>
+            <option value="90">3 months</option>
+            <option value="180">6 months</option>
+            <option value="365">Year</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Last talked</label>
+          <input type="date" id="f-lastcontact">
+        </div>
+        <div class="field">
+          <label>Birthday (opt.)</label>
+          <input type="text" id="f-birthday" placeholder="MM-DD">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="What to remember, what to ask about&hellip;"></textarea>
+      </div>
+      <div class="sheet-actions">
+        <button type="button" class="btn" id="cancelForm">Cancel</button>
+        <button type="submit" class="btn primary" id="saveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="detailBackdrop">
+  <div class="sheet">
+    <div class="detail-monogram-row" id="detailMonogramRow"></div>
+    <h2 id="detailName">Name</h2>
+    <div class="detail-quip" id="detailQuip"></div>
+    <div class="detail-meta">
+      <div>Last talked<b id="detailLast">-</b></div>
+      <div>Check-in<b id="detailFreq">-</b></div>
+      <div id="detailBdayWrap" style="display:none;">Birthday<b id="detailBday">-</b></div>
+    </div>
+    <div class="detail-notes" id="detailNotes"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="editBtn">Edit</button>
+      <button type="button" class="btn secondary" id="deleteBtn">Delete</button>
+    </div>
+    <div class="sheet-actions" style="margin-top:10px;">
+      <button type="button" class="btn happy" id="markTouchedBtn">Caught up today</button>
+    </div>
+    <div class="sheet-actions" style="margin-top:10px;">
+      <button type="button" class="btn" id="closeDetailBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'crm-contacts';
+let contacts = [];
+let activeFilter = 'all';
+let searchQuery = '';
+let editingId = null;
+let detailId = null;
+
+const $ = (id) => document.getElementById(id);
+
+const RELCOLOR = { family:'#EDE6D8', friend:'#D91E24', work:'#6E93A6', other:'#8C6FB0' };
+const RELLABEL = { family:'Kin', friend:'Shield-kin', work:'Guild', other:'Wanderer' };
+
+const ROW_QUIPS = {
+  happy: ["Warm as dragonfire.", "Bright and unshaken.", "Freshly stoked."],
+  neutral: ["The embers are dimming.", "Due for a spark soon.", "Cooling, but not lost."],
+  sad: ["Cold as the frost coast.", "This bond needs rekindling.", "Long overdue for a visit.", "Buried under snow."],
+};
+
+const EMBLEM_QUIPS = {
+  clear: [
+    "Every bond here burns bright and steady.",
+    "Not a single ember has gone cold today.",
+    "The whole flight is in formation.",
+  ],
+  mild: [
+    "A few embers are dimming. Feed them before they die.",
+    "Someone's watching the horizon for your signal.",
+    "The frost creeps in slowly, then all at once.",
+  ],
+  bad: [
+    "Half this flight has gone cold as the northern sea.",
+    "Several bonds need stoking, and soon.",
+    "This is the part where you send a raven.",
+  ],
+};
+
+function hashStr(s){
+  let h = 0;
+  for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
+function pick(arr, seed){
+  return arr[seed % arr.length];
+}
+
+function uid(){
+  return 'c-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+}
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+function daysSince(dateStr){
+  if(!dateStr) return 9999;
+  const then = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.floor((now - then) / 86400000);
+}
+function moodOf(ratio){
+  if(ratio < 0.6) return 'happy';
+  if(ratio < 1) return 'neutral';
+  return 'sad';
+}
+function moodColor(mood){
+  return {happy:'var(--ember)', neutral:'var(--ash)', sad:'var(--frost)'}[mood];
+}
+
+function initials(name){
+  return name.trim().split(/\s+/).slice(0,2).map(p => p[0]?.toUpperCase() || '').join('');
+}
+
+function monogramHTML(name, relationship){
+  const color = RELCOLOR[relationship] || RELCOLOR.other;
+  return `<div class="monogram" style="border-color:${color}; color:${color}; background:var(--panel-2);">${initials(name)}</div>`;
+}
+
+// Corner emblem badge (viewBox 0 0 100 90) — black/red split bat-wing V with a
+// horned skull on the red half, inspired by the uploaded reference, mirrored for symmetry.
+function emblemWingHalf(){
+  return `<path d="M50 85 Q70 78 84 55 Q92 42 88 34 Q94 30 90 24 Q96 20 88 20 Q64 24 52 44 Q50 60 50 85 Z"/>`;
+}
+function emblemInnerMarkup(){
+  return `
+    <g fill="#0A0A0A" transform="translate(100,0) scale(-1,1)">${emblemWingHalf()}</g>
+    <g fill="#D91E24">${emblemWingHalf()}</g>
+    <ellipse cx="72" cy="46" rx="8" ry="7" fill="#FFFFFF"/>
+    <path d="M65 40 Q63 34 67 32 Q69 36 66 40 Z" fill="#FFFFFF"/>
+    <path d="M79 40 Q81 34 77 32 Q75 36 78 40 Z" fill="#FFFFFF"/>
+    <circle cx="69" cy="45" r="1.3" fill="#D91E24"/>
+    <circle cx="75" cy="45" r="1.3" fill="#D91E24"/>
+    <path d="M67 51 Q69 53 71 51 Q73 53 75 51 Q77 53 79 51" stroke="#D91E24" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  `;
+}
+function emblemSVG(){
+  return `<svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">${emblemInnerMarkup()}</svg>`;
+}
+function appIconSVGString(){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect x="0" y="0" width="64" height="64" rx="14" fill="#0D0B0C"/>
+    <g transform="translate(9.7,3.9) scale(0.446)">${emblemInnerMarkup()}</g>
+  </svg>`;
+}
+
+function setupHomeScreenIcon(){
+  try{
+    const svgStr = appIconSVGString();
+    const dataUri = 'data:image/svg+xml;base64,' + btoa(svgStr);
+
+    const iconLink = document.createElement('link');
+    iconLink.rel = 'icon';
+    iconLink.type = 'image/svg+xml';
+    iconLink.href = dataUri;
+    document.head.appendChild(iconLink);
+
+    const appleLink = document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    appleLink.href = dataUri;
+    document.head.appendChild(appleLink);
+
+    const manifest = {
+      name: 'The Flight Log',
+      short_name: 'Flight Log',
+      display: 'standalone',
+      background_color: '#0D0B0C',
+      theme_color: '#0D0B0C',
+      icons: [
+        { src: dataUri, sizes: '64x64', type: 'image/svg+xml', purpose: 'any maskable' }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = URL.createObjectURL(manifestBlob);
+    document.head.appendChild(manifestLink);
+  }catch(e){
+    // Icon setup is best-effort; app still works without it.
+  }
+}
+
+function isBirthdaySoon(bday){
+  if(!bday || !/^\d{2}-\d{2}$/.test(bday)) return null;
+  const [mm, dd] = bday.split('-').map(Number);
+  const now = new Date();
+  let target = new Date(now.getFullYear(), mm-1, dd);
+  if(target < new Date(now.getFullYear(), now.getMonth(), now.getDate())){
+    target = new Date(now.getFullYear()+1, mm-1, dd);
+  }
+  const diff = Math.ceil((target - now) / 86400000);
+  return diff <= 21 ? diff : null;
+}
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+async function loadContacts(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY);
+    contacts = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    contacts = [];
+  }
+  $('emblemBadge').innerHTML = emblemSVG();
+  render();
+}
+async function saveContacts(){
+  try{
+    const res = await window.storage.set(STORAGE_KEY, JSON.stringify(contacts));
+    if(!res){ showToast('Could not save — try again'); }
+  }catch(e){
+    showToast('Storage hiccup — try again');
+  }
+}
+
+// Small ember-colored spark burst, played whenever a bond is marked caught up
+function sparkBurst(x, y){
+  const colors = ['#D91E24', '#EDE6D8', '#B0A398'];
+  for(let i=0; i<12; i++){
+    const p = document.createElement('div');
+    p.className = 'spark-particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.background = colors[i % colors.length];
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 30 + Math.random() * 40;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist - 16;
+    p.style.transition = 'transform .6s ease-out, opacity .6s ease-out';
+    document.body.appendChild(p);
+    requestAnimationFrame(() => {
+      p.style.transform = `translate(${dx}px, ${dy}px) rotate(${Math.random()*360}deg)`;
+      p.style.opacity = '0';
+    });
+    setTimeout(() => p.remove(), 650);
+  }
+}
+
+function getFiltered(){
+  let list = contacts.slice();
+  if(activeFilter !== 'all'){
+    list = list.filter(c => c.relationship === activeFilter);
+  }
+  if(searchQuery.trim()){
+    const q = searchQuery.trim().toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q));
+  }
+  list.sort((a,b) => {
+    const ra = daysSince(a.lastContact) / (a.frequencyDays || 30);
+    const rb = daysSince(b.lastContact) / (b.frequencyDays || 30);
+    return rb - ra;
+  });
+  return list;
+}
+
+function render(){
+  const list = getFiltered();
+
+  const listEl = $('list');
+  if(list.length === 0){
+    listEl.innerHTML = contacts.length === 0
+      ? `<div class="empty"><h2>The flight log is empty</h2><p>Tap + to add the first person<br>you want to keep close.</p></div>`
+      : `<div class="empty"><h2>No matches</h2><p>Try a different search or filter.</p></div>`;
+    return;
+  }
+
+  listEl.innerHTML = list.map(c => {
+    const ds = daysSince(c.lastContact);
+    const ratio = ds / (c.frequencyDays || 30);
+    const mood = moodOf(ratio);
+    const bdaySoon = isBirthdaySoon(c.birthday);
+    const dayLabel = c.lastContact ? (ds === 0 ? 'today' : ds + 'd ago') : 'never';
+    const quip = pick(ROW_QUIPS[mood], hashStr(c.id));
+    return `
+      <div class="row" data-id="${c.id}">
+        ${monogramHTML(c.name, c.relationship)}
+        <div class="row-main">
+          <div class="row-top">
+            <span class="row-name">${escapeHTML(c.name)}</span>
+            <span class="row-tag">${RELLABEL[c.relationship]} &middot; <span style="color:${moodColor(mood)}">${dayLabel}</span></span>
+          </div>
+          <div class="row-quip">${quip}</div>
+          ${bdaySoon !== null ? `<div class="bday-badge">Birthday in ${bdaySoon}d</div>` : ''}
+        </div>
+        <button class="touch-btn" data-touch="${c.id}">Caught<br>up</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHTML(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// Tap the emblem for a read on how the whole flight is doing
+$('emblemBadge').addEventListener('click', () => {
+  const overdue = contacts.filter(c => daysSince(c.lastContact) / (c.frequencyDays||30) >= 1).length;
+  const total = contacts.length;
+  let msg;
+  if(total === 0){
+    msg = 'No bonds recorded yet. Add someone to begin.';
+  } else if(overdue === 0){
+    msg = pick(EMBLEM_QUIPS.clear, Date.now());
+  } else if(overdue / total < 0.4){
+    msg = pick(EMBLEM_QUIPS.mild, Date.now());
+  } else {
+    msg = pick(EMBLEM_QUIPS.bad, Date.now());
+  }
+  showToast(msg);
+  const badge = $('emblemBadge');
+  badge.classList.remove('pulse');
+  void badge.offsetWidth; // restart animation
+  badge.classList.add('pulse');
+});
+
+// ---- Form handling ----
+function openForm(contact){
+  editingId = contact ? contact.id : null;
+  $('formTitle').textContent = contact ? 'Edit person' : 'Add someone';
+  $('f-name').value = contact ? contact.name : '';
+  $('f-relationship').value = contact ? contact.relationship : 'friend';
+  $('f-frequency').value = contact ? String(contact.frequencyDays) : '30';
+  $('f-lastcontact').value = contact ? (contact.lastContact || '') : todayISO();
+  $('f-birthday').value = contact ? (contact.birthday || '') : '';
+  $('f-notes').value = contact ? (contact.notes || '') : '';
+  $('formBackdrop').classList.add('open');
+}
+function closeForm(){
+  $('formBackdrop').classList.remove('open');
+  editingId = null;
+}
+
+$('addBtn').addEventListener('click', () => openForm(null));
+$('cancelForm').addEventListener('click', closeForm);
+$('formBackdrop').addEventListener('click', (e) => { if(e.target === e.currentTarget) closeForm(); });
+
+$('contactForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = $('f-name').value.trim();
+  if(!name) return;
+  let bday = $('f-birthday').value.trim();
+  if(bday && !/^\d{2}-\d{2}$/.test(bday)) bday = '';
+
+  const data = {
+    name,
+    relationship: $('f-relationship').value,
+    frequencyDays: parseInt($('f-frequency').value, 10),
+    lastContact: $('f-lastcontact').value || todayISO(),
+    birthday: bday,
+    notes: $('f-notes').value.trim(),
+  };
+
+  if(editingId){
+    const idx = contacts.findIndex(c => c.id === editingId);
+    if(idx > -1) contacts[idx] = {...contacts[idx], ...data};
+  } else {
+    contacts.push({ id: uid(), ...data });
+  }
+  await saveContacts();
+  closeForm();
+  render();
+  showToast(editingId ? 'Saved' : `${name} added to the flight log`);
+});
+
+// ---- List interactions ----
+$('list').addEventListener('click', async (e) => {
+  const touchBtn = e.target.closest('[data-touch]');
+  if(touchBtn){
+    e.stopPropagation();
+    const id = touchBtn.getAttribute('data-touch');
+    const c = contacts.find(x => x.id === id);
+    if(c){
+      c.lastContact = todayISO();
+      await saveContacts();
+      const rect = touchBtn.getBoundingClientRect();
+      sparkBurst(rect.left + rect.width/2, rect.top + rect.height/2);
+      render();
+      showToast(`Marked ${c.name} as caught up`);
+    }
+    return;
+  }
+  const row = e.target.closest('.row');
+  if(row){
+    openDetail(row.getAttribute('data-id'));
+  }
+});
+
+// ---- Detail sheet ----
+function openDetail(id){
+  const c = contacts.find(x => x.id === id);
+  if(!c) return;
+  detailId = id;
+  const ds = daysSince(c.lastContact);
+  const ratio = ds / (c.frequencyDays || 30);
+  const mood = moodOf(ratio);
+  $('detailMonogramRow').innerHTML = monogramHTML(c.name, c.relationship);
+  $('detailName').textContent = c.name;
+  $('detailQuip').textContent = pick(ROW_QUIPS[mood], hashStr(c.id) + 1);
+  $('detailLast').textContent = c.lastContact ? `${ds}d ago` : 'Never';
+  $('detailLast').style.color = moodColor(mood);
+  $('detailFreq').textContent = `${c.frequencyDays}d`;
+  const bdaySoon = isBirthdaySoon(c.birthday);
+  if(c.birthday){
+    $('detailBdayWrap').style.display = 'block';
+    $('detailBday').textContent = c.birthday + (bdaySoon !== null ? ` (${bdaySoon}d)` : '');
+  } else {
+    $('detailBdayWrap').style.display = 'none';
+  }
+  $('detailNotes').textContent = c.notes || 'No notes yet.';
+  $('detailBackdrop').classList.add('open');
+}
+function closeDetail(){
+  $('detailBackdrop').classList.remove('open');
+  detailId = null;
+}
+$('closeDetailBtn').addEventListener('click', closeDetail);
+$('detailBackdrop').addEventListener('click', (e) => { if(e.target === e.currentTarget) closeDetail(); });
+
+$('editBtn').addEventListener('click', () => {
+  const c = contacts.find(x => x.id === detailId);
+  closeDetail();
+  openForm(c);
+});
+
+$('deleteBtn').addEventListener('click', async () => {
+  const c = contacts.find(x => x.id === detailId);
+  if(!c) return;
+  contacts = contacts.filter(x => x.id !== detailId);
+  await saveContacts();
+  closeDetail();
+  render();
+  showToast(`${c.name} removed from the flight log`);
+});
+
+$('markTouchedBtn').addEventListener('click', async (e) => {
+  const c = contacts.find(x => x.id === detailId);
+  if(!c) return;
+  c.lastContact = todayISO();
+  await saveContacts();
+  const rect = e.currentTarget.getBoundingClientRect();
+  sparkBurst(rect.left + rect.width/2, rect.top + rect.height/2);
+  render();
+  openDetail(detailId);
+  showToast(`Marked ${c.name} as caught up`);
+});
+
+// ---- Filters & search ----
+$('chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  activeFilter = chip.getAttribute('data-filter');
+  render();
+});
+
+$('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  render();
+});
+
+// ---- Init ----
+setupHomeScreenIcon();
+loadContacts();
+</script>
+</body>
+</html>
